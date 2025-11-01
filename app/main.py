@@ -17,7 +17,7 @@
 #     return {"message": "Hello from FastAPI + Supabase!", "time": result["now"]}
 from fastapi import FastAPI
 from app.db.database import get_db_connection
-from app.api.v1 import auth  
+from app.api.v1 import auth,chatbot 
 from fastapi.middleware.cors import CORSMiddleware
 
 
@@ -35,6 +35,7 @@ app.add_middleware(
 
 # Include your auth endpoints
 app.include_router(auth.router)
+app.include_router(chatbot.router)
 
 # Test DB connection once at startup
 conn = get_db_connection()
