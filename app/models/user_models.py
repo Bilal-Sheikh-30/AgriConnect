@@ -1,13 +1,3 @@
-# from pydantic import BaseModel, EmailStr, Field
-# from typing import Annotated
-
-# class UserSignup(BaseModel):
-#     Name: Annotated[str, Field(min_length=2)]
-#     Email: EmailStr
-#     Password: Annotated[str, Field(min_length=6)]
-#     contact: int
-#     province: Annotated[str, Field(min_length=2)]
-#     city: Annotated[str, Field(min_length=2)]
 from pydantic import BaseModel, EmailStr, Field
 from typing import Annotated
 
