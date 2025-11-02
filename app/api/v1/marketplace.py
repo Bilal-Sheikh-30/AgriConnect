@@ -32,7 +32,7 @@ def get_available_items():
 
         cursor.execute('''
             SELECT i.id, i.name, i.category, i.image, i.price, i.quantity, i.status,
-                   i.seller, u.name AS seller_name, u.province AS seller_province, u.city AS seller_city
+                   i.seller, u.name AS seller_name, u.province AS seller_province, u.city AS seller_city,u.contact AS seller_contact
             FROM item i
             JOIN "user" u ON i.seller = u.id
             WHERE i.status = %s;
