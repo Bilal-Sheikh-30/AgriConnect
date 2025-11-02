@@ -17,23 +17,23 @@
 #     return {"message": "Hello from FastAPI + Supabase!", "time": result["now"]}
 from fastapi import FastAPI
 from app.db.database import get_db_connection
-from app.api.v1 import auth,chatbot, resource
+from app.api.v1 import auth,chatbot, resource, marketplace
 from fastapi.middleware.cors import CORSMiddleware
 
 
 app = FastAPI()
 
-# ✅ Allow all origins
+# Allow all origins
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],       # Allow any origin
+    allow_origins=["*"],       
     allow_credentials=True,
-    allow_methods=["*"],       # Allow GET, POST, PUT, DELETE, etc.
-    allow_headers=["*"],       # Allow all headers
+    allow_methods=["*"],       
+    allow_headers=["*"],       
 )
 
 
-# Include your auth endpoints
+# Include  auth endpoints
 app.include_router(auth.router)
 app.include_router(chatbot.router)
 
@@ -51,3 +51,4 @@ def home():
     return {"message": "Hello from FastAPI + Supabase!", "time": result["now"]}
 
 app.include_router(resource.router, prefix="/api/v1/resource", tags=["Resource"])
+app.include_router(marketplace.router, prefix="/api/v1", tags=["marketplace"])
