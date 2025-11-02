@@ -17,7 +17,7 @@
 #     return {"message": "Hello from FastAPI + Supabase!", "time": result["now"]}
 from fastapi import FastAPI
 from app.db.database import get_db_connection
-from app.api.v1 import auth,chatbot 
+from app.api.v1 import auth,chatbot, resource
 from fastapi.middleware.cors import CORSMiddleware
 
 
@@ -49,3 +49,5 @@ def home():
     cursor.execute("SELECT NOW();")
     result = cursor.fetchone()
     return {"message": "Hello from FastAPI + Supabase!", "time": result["now"]}
+
+app.include_router(resource.router, prefix="/api/v1/resource", tags=["Resource"])
