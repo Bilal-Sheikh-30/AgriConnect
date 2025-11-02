@@ -103,3 +103,39 @@ async def create_item(
         new_item["price"] = float(new_item["price"])
 
     return {"message": "Item created successfully!", "item": new_item}
+
+
+
+@router.get("/my-items")
+async def get_my_items(current_user: dict = Depends(get_current_user)):
+    """
+    Get all items belonging to the logged-in user
+    """
+    conn = get_db_connection()
+    if not conn:
+        raise HTTPException(status_code=500, detail="Database connection failed")
+
+    try:
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        
+        cursor.execute(
+            """
+            SELECT id, name, category, image, price, quantity, status, seller
+            FROM item
+            WHERE seller = %s
+            """,
+            (current_user["id"],)
+        )
+        items = cursor.fetchall()
+
+        for item in items:
+            if item["price"] is not None:
+                item["price"] = float(item["price"])
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch items: {str(e)}")
+    finally:
+        cursor.close()
+        conn.close()
+
+    return {"items": items}
