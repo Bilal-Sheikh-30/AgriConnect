@@ -8,6 +8,7 @@ import psycopg2.extras
 from dotenv import load_dotenv
 import psycopg2.extras
 
+
 load_dotenv()
 
 cloudinary.config(
@@ -20,6 +21,9 @@ router = APIRouter(prefix="/resource", tags=["Resource"])
 
 from fastapi import HTTPException
 import psycopg2.extras
+
+
+
 
 @router.get("/available")
 def get_available_resources():
@@ -38,7 +42,7 @@ def get_available_resources():
         # Join Resource with User to get owner info
         cursor.execute('''
             SELECT r.id, r.title, r.category, r.image, r.rent_per_hour, r.status,
-                   r.owner, u.name AS owner_name, u.province AS owner_province, u.city AS owner_city
+                   r.owner, u.name AS owner_name, u.province AS owner_province, u.city AS owner_city,u.contact AS owner_contact
             FROM "Resource" r
             JOIN "user" u ON r.owner = u.id
             WHERE r.status = %s;
