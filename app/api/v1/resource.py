@@ -90,7 +90,7 @@ async def create_resource(
         """
         INSERT INTO "Resource" (title, category, image, "rent_per_hour", status, owner)
         VALUES (%s, %s, %s, %s, %s, %s)
-        RETURNING id, title, category, image, "rent per hour", status, owner;
+        RETURNING id, title, category, image, "rent_per_hour", status, owner;
         """,
         (title, category, image_url, rent_per_hour, "available", current_user["id"])
     )
@@ -115,7 +115,7 @@ async def get_my_resources(current_user: dict = Depends(get_current_user)):
         
         cursor.execute(
             """
-            SELECT id, title, category, image, "rent per hour", status, owner
+            SELECT id, title, category, image, "rent_per_hour", status, owner
             FROM "Resource"
             WHERE owner = %s
             """,

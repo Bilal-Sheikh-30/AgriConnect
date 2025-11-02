@@ -3,6 +3,7 @@ from uuid import UUID
 from datetime import datetime, timezone
 from app.db.database import get_db_connection
 from app.utils.jwt_util import get_current_user
+import psycopg2.extras
 
 router = APIRouter()
 
@@ -125,3 +126,57 @@ def rent_equipment(equipment_id: UUID, payload: dict, current_user: dict = Depen
             conn.close()
         except Exception:
             pass
+
+
+
+@router.get("/my-borrowed")
+async def get_my_borrowed(current_user: dict = Depends(get_current_user)):
+    """
+    Get all rentals where the logged-in user is the renter,
+    including owner details, ordered by most recent rental first.
+    """
+    print(f'\ncurrent user: {current_user["id"]}')
+    conn = get_db_connection()
+    if not conn:
+        raise HTTPException(status_code=500, detail="Database connection failed")
+
+    try:
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+        # Join Rentals with Resource and User (owner) to get all info
+        cursor.execute('''
+    SELECT 
+        r.id AS rental_id,
+        res.id AS resource_id,
+        res.title AS resource_title,
+        res.category AS resource_category,
+        res.image AS resource_image,
+        res."rent_per_hour" AS rent_per_hour,
+        r."rented from" AS rented_from,
+        r."rented to" AS rented_to,
+        u.id AS owner_id,
+        u.name AS owner_name,
+        u.province AS owner_province,
+        u.city AS owner_city
+    FROM "Rentals" r
+    JOIN "Resource" res ON r.resource = res.id
+    JOIN "user" u ON r.owner = u.id
+    WHERE r.renter = %s
+    ORDER BY r."rented from" DESC
+''', (current_user["id"],))
+
+
+        borrowed_items = cursor.fetchall()
+
+        # Convert Decimal to float for rent_per_hour
+        for item in borrowed_items:
+            if item["rent_per_hour"] is not None:
+                item["rent_per_hour"] = float(item["rent_per_hour"])
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch borrowed items: {str(e)}")
+    finally:
+        cursor.close()
+        conn.close()
+
+    return {"borrowed_items": borrowed_items}
