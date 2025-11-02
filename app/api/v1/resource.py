@@ -6,6 +6,8 @@ import uuid
 import os
 import psycopg2.extras
 from dotenv import load_dotenv
+import psycopg2.extras
+
 load_dotenv()
 
 cloudinary.config(
@@ -19,26 +21,39 @@ router = APIRouter(prefix="/resource", tags=["Resource"])
 @router.get("/available")
 def get_available_resources():
     """
-    Get all resources where status = 'available'
+    Get all resources where status = 'available', 
+    including owner's name, province, and city
     """
     conn = get_db_connection()
-    cursor = conn.cursor()
+    if not conn:
+        raise HTTPException(status_code=500, detail="Database connection failed")
 
     try:
-        cursor.execute('SELECT * FROM "Resource" WHERE status = %s;', ("available",))
-        resources = cursor.fetchall()
+        # Use RealDictCursor to get dicts
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+        # Join Resource with User to get owner info
+        cursor.execute('''
+            SELECT r.id, r.title, r.category, r.image, r.rent_per_hour, r.status,
+                   r.owner, u.name AS owner_name, u.province AS owner_province, u.city AS owner_city
+            FROM "Resource" r
+            JOIN "user" u ON r.owner = u.id
+            WHERE r.status = %s;
+        ''', ("available",))
+
+        resources = cursor.fetchall()  # List of dicts
+
+        # Convert Decimal to float for rent_per_hour
+        for r in resources:
+            r["rent_per_hour"] = float(r["rent_per_hour"])
+
+        cursor.close()
         conn.close()
 
         if not resources:
             return {"message": "No available resources found.", "resources": []}
 
-        # mapping to list of dicts
-        resources_list = []
-        columns = [desc[0] for desc in cursor.description]
-        for row in resources:
-            resources_list.append(dict(zip(columns, row)))
-
-        return {"resources": resources_list}
+        return {"resources": resources}
 
     except Exception as e:
         conn.close()
@@ -72,7 +87,7 @@ async def create_resource(
     # Insert resource into DB
     cursor.execute(
         """
-        INSERT INTO "Resource" (title, category, image, "rent per hour", status, owner)
+        INSERT INTO "Resource" (title, category, image, "rent_per_hour", status, owner)
         VALUES (%s, %s, %s, %s, %s, %s)
         RETURNING id, title, category, image, "rent per hour", status, owner;
         """,
