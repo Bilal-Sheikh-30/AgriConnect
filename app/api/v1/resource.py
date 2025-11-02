@@ -18,6 +18,9 @@ cloudinary.config(
 
 router = APIRouter(prefix="/resource", tags=["Resource"])
 
+from fastapi import HTTPException
+import psycopg2.extras
+
 @router.get("/available")
 def get_available_resources():
     """
@@ -58,8 +61,6 @@ def get_available_resources():
     except Exception as e:
         conn.close()
         raise HTTPException(status_code=500, detail=str(e))
-
-
 
 @router.post("/create")
 async def create_resource(
